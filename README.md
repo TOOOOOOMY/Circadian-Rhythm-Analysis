@@ -3,10 +3,12 @@
 
 ## Description
 Not for programer, but for bio researchers.
+
 This is the tool to make a graph, detect the peaks, and detemine the periods.
 
-###P.S.
+### P.S.
 ver2 only has graphing function.
+
 Other functions will come soon.
 
 ## Demo
