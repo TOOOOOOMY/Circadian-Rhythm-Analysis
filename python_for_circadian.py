@@ -1,6 +1,7 @@
+#ピーク検出導入試行中
 """
 更新最新情報：
-200109 - グラフの軸表記設定を追加
+200113 - LUMICEC以外のコラム表記に対応
 """
 
 #使い方
@@ -11,11 +12,14 @@
 ##１：「目次」「コードスニペット」「ファイル」のうち「ファイル」をクリック
 ##　（「ファイルのブラウジング～」との表示が出ている場合は、自動で起動するまでしばらく待つ　or　上のタブから「ランタイム」→「ランタイムを再起動」）
 
-##２：「アップロード」から解析したいファイル（csv形式）をアップロード（「注：アップロードした～」の警告にはOKをクリック）
+##２：「アップロード」から解析したいcsvファイルをアップロード（「注：アップロードした～」の警告にはOKをクリック）
 
-##３：下の「"」に囲まれた部分をアップロードしたファイル名（拡張子除く）に変更、例：sample.cvsをアップロードした場合は"sample"とする
-##　　　　ファイル形式に関してはこちらを参照→https://sites.google.com/view/pythonforchlamy/csv-files
+##３-１：下の「"」に囲まれた部分をアップロードしたファイル名（拡張子除く）に変更、例：sample.cvsをアップロードした場合は"sample"とする
+##　 　　ファイル形式に関してはこちらを参照→https://sites.google.com/view/pythonforchlamy/csv-files
 file_name = "sample1"  
+
+##３-２：csvファイルの出力元を選択（LUMICEC → 0、ALOKA → 1、その他 → 2）
+file_from = 1
 
 ##４-１：サンプリング周期を分単位で入力（下のsampling_period = xxのxxを変える、以下同じ）
 sampling_period = 60
@@ -57,14 +61,14 @@ y_axis_share_switch = 1
 color_list = ["black", "red", "orange", "green", "lightgreen", "blue", "lightblue", "yellow", "teal", "cyan",  "gray"]
 
 ##グループ番号毎のタイトル、先頭から数字の０に対応
-subtitle_list = ["Group0", "Resi", "Group2", "Sens", "Group4", "Group5", "Group6", "Group7", "Group8", "Group9", "Group10"]
+subtitle_list = ["Group0", "Group1", "Group2", "Group3", "Group4", "Group5", "Group6", "Group7", "Group8", "Group9", "Group10"]
 
 """
 ＝＝＝＝＝＝＝＝＝＝
 """
 
 
-"""
+"""   
 ＝＝＝＝＝＝＝＝＝＝
 詳細設定
 """
@@ -105,6 +109,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft
 
+switch_list = []
 
 def color_changer(data_number):
     COLOR = color_list[int(data_number)]
@@ -146,8 +151,8 @@ def well_namer(i):
     return ROW, Col
 
 
-def router(file_name, y_axis_switch, over_view_plot_switch, all_plot_switch, color_list, subtitle_list, column_number):
-    row_data = pd.read_csv("/content/{0}.csv".format(file_name), engine="python", encoding="utf-8_sig")
+def router():
+    row_data = pd.read_csv("{0}.csv".format(file_name), engine="python", encoding="utf-8_sig")
     try:
         new_data = row_data.drop('Unnamed: 0', axis=1).T
         X_axis = round(row_data["Unnamed: 0"].iloc[1:].reset_index(drop=True).astype(float), 4)
@@ -162,7 +167,7 @@ def router(file_name, y_axis_switch, over_view_plot_switch, all_plot_switch, col
             print("<==========\nCSV file Error. \n\nA1 cell needs to be 'Time' or blank.\n==========>")
             sys.exit()
         else:
-            if y_axis_switch == 0:
+            if y_axis_share_switch == 0:
                 Yaxis = "Not shared"
             else :
                 Yaxis = "Y shared"
@@ -236,12 +241,16 @@ def all_plot(X_axis, new_data, all_data, data_name, Yaxis):
     F_max = np.amax(np.amax(new_data))
     Y_max = -(-F_max//1000)*1000
     fig = plt.figure(figsize=(a_column*a_width, -(-new_data.shape[0]//a_column)*a_length))
+    print("file_from : {}".format(file_from))
     for i in range(1, new_data.shape[0]+1):
         ax =  fig.add_subplot(-(-new_data.shape[0]//a_column),a_column,i)
 
-        ROW, Col = well_namer(i)
+        if file_from == 0:
+            ROW, Col = well_namer(i)
+            Name = '{0}{1}'.format(ROW, Col)
+        else :
+            Name = new_data.index[i-1]
 
-        Name = '{0}{1}'.format(ROW, Col)
         try:
             show = new_data.T[Name]
         except KeyError:
@@ -285,4 +294,4 @@ def all_plot(X_axis, new_data, all_data, data_name, Yaxis):
     plt.show()
 
 
-router(file_name, y_axis_share_switch, over_view_plot_switch, all_plot_switch, color_list, subtitle_list, column_number)
+router()
