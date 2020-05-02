@@ -1,6 +1,8 @@
 # Pyhton_for_Circadian
 (Will be) for circadian rhythm analysis.
 
+pypi available from [here](https://pypi.org/project/cr-analysis/1.0.0/).
+
 ## Description
 Not for programer, but for bio researchers.
 
