@@ -7,7 +7,7 @@ from cr_analysis.visualizer import visualizer
 # Prepare the csv file. E.g. sample1.csv
 # E.g. visualizer('sample1', file_path = '/content/drive/My Drive/')
 
-visualizer('YOUR csv file name', file_path = 'file pass')
+visualizer('YOUR csv file name', file_path = 'file path')
 ```
 
 
