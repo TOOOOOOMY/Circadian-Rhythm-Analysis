@@ -1,7 +1,15 @@
 # Pyhton_for_Circadian
-(Will be) for circadian rhythm analysis.
+**Tis package has beem published!**
+```py
+pip install cr-analysis
+from cr_analysis.visualizer import visualizer
 
-pypi available from [here](https://pypi.org/project/cr-analysis/1.0.0/).
+# Prepare the csv file. E.g. sample1.csv
+# E.g. visualizer('sample1', file_path = '/content/drive/My Drive/')
+
+visualizer('YOUR csv file name', file_path = 'file pass')
+```
+
 
 ## Description
 Not for programer, but for bio researchers.
