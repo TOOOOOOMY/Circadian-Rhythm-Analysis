@@ -1,5 +1,5 @@
 # Pyhton_for_Circadian
-**Tis package has beem published!**
+**This package has been published!**
 ```py
 pip install cr-analysis
 from cr_analysis.visualizer import visualizer
