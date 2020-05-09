@@ -12,9 +12,9 @@ visualizer('YOUR csv file name', file_path = 'file path')
 
 
 ## Description
-Not for programer, but for bio researchers.
-
-This is the tool to make a graph, detect the peaks, and detemine the periods.
+This is the tool to make a graph.
+Peak detection and period determination will be available
+Detect the peaks, and detemine the periods.
 
 ### P.S.
 ver2 only has graphing function.
