@@ -1,13 +1,13 @@
 # Pyhton_for_Circadian
-**This package has been published!**
+**cr-analysis 2.0.1 is available now!**
+
 ```py
 pip install cr-analysis
-from cr_analysis.visualizer import visualizer
+from cr_analysis.main import visualizer
 
 # Prepare the csv file. E.g. sample1.csv
-# E.g. visualizer('sample1', file_path = '/content/drive/My Drive/')
-
-visualizer('YOUR csv file name', file_path = 'file path')
+# E.g. 
+visualizer('sample1.csv', file_path = '/content/drive/My Drive/')
 ```
 
 
