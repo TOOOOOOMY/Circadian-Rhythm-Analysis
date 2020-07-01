@@ -21,7 +21,7 @@ ver3 only has graphing function.
 
 Other functions will come soon.
 
-##
+## Settings
 
 ```py
 # graph_settings
