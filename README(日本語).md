@@ -6,11 +6,15 @@
 なお、本パッケージは「とりあえずグラフ化して測定結果の概要を見たい」といった予備解析的な場合での利用を想定しています。  
 
 ## 使用例
-１：同系列を重ねて表示
-![sample1 csv - overview_4_col_plot](https://user-images.githubusercontent.com/45617592/86254771-4bb6b900-bbf1-11ea-8c29-9e9cb4e1f00b.jpg)
+１：概要＆同系列を重ねて表示
+![sample1 csv - overview_4_col_plot](https://user-images.githubusercontent.com/45617592/86256856-c680d380-bbf3-11ea-92a7-92be3bdb547f.jpg)
+
   
 ２：個別に表示
-![sample1 csv - All_plot](https://user-images.githubusercontent.com/45617592/86254878-70ab2c00-bbf1-11ea-977a-11accf284a9d.jpg)
+![sample1 csv - All_plot](https://user-images.githubusercontent.com/45617592/86256927-d993a380-bbf3-11ea-9a42-b81b4fc07ff8.jpg)
 
+
+３：重ね合わせて表示
+![sample1 csv - comparison_plot](https://user-images.githubusercontent.com/45617592/86256644-8883af80-bbf3-11ea-8c4b-38d8090bbffd.png)
 
 
