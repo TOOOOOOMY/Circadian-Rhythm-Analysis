@@ -41,17 +41,17 @@ settings = {
 
 
 settings_2 = {
-    0 : ["black", "Non"],
-    1 : ["red", "TOC1-Resi-R"],
-    2 : ["orange", "TOC1-Resi-AR"],
-    3 : ["green", "TOC1-Sens-R"],
-    4 : ["lightgreen", "TOC1-Sens-AR"],
-    5 : ["blue", "CBR"],
+    0 : ["black", "Group0"],
+    1 : ["red", "Group1"],
+    2 : ["orange", "Group2"],
+    3 : ["green", "Group3"],
+    4 : ["lightgreen", "Group4"],
+    5 : ["blue", "Group5"],
     6 : ["lightblue", "Group6"],
-    7 : ["orangered", "PRR1-Resi-R"],
-    8 : ["salmon", "PRR1-Resi-AR"],
-    9 : ["forestgreen", "PRR1-Sens-R"],
-    10 : ["limegreen", "PRR1-Sens-AR"],
+    7 : ["orangered", "Group7"],
+    8 : ["salmon", "PGroup8"],
+    9 : ["forestgreen", "Group9"],
+    10 : ["limegreen", "Group10"],
 }
 
 
@@ -64,7 +64,7 @@ visualizer(file_name, # include .csv -> sample.csv
                graph_settings = settings,
                subtitle_and_color = settings_2,
                overlap_dict = setting_3,
-               file_from = 1, #Lumicecの場合は0
+               file_from = 1, #If the data comes from Lumicec, set 0. Default is 1.
                sampling_period = 60,
                estimated_period = 24,
                over_view_plot_switch = 1,
