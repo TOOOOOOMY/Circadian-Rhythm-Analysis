@@ -1,5 +1,5 @@
 # Pyhton_for_Circadian
-**cr-analysis 2.0.1 is available now!**
+**01/07/2020 cr-analysis 3.0.0 is available now!**
 
 ```py
 pip install cr-analysis
@@ -17,7 +17,7 @@ Peak detection and period determination will be available
 Detect the peaks, and detemine the periods.
 
 ### P.S.
-ver2 only has graphing function.
+ver3 only has graphing function.
 
 Other functions will come soon.
 
