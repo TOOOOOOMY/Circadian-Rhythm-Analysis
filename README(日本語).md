@@ -17,4 +17,8 @@
 ３：重ね合わせて表示
 ![sample1 csv - comparison_plot](https://user-images.githubusercontent.com/45617592/86256644-8883af80-bbf3-11ea-8c4b-38d8090bbffd.png)
 
+## 特徴
+・３行のコピペで上記使用例のような解析が可能です。  
+・解析速度はインターネット環境や解析ファイルサイズによりますが、97列x150行のデータであれば30秒ほどで完了します。  
 
+## 
