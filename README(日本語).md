@@ -1,7 +1,7 @@
 # 概日リズム解析パッケージ「cr-analysis」
 **README in English is available from [here](https://github.com/TOOOOOOMY/Circadian-Rhythm-Analysis).**  
 概日リズム解析において、測定データをグラフ化して大まかに比較できるパッケージです。  
-プログラムミングはよくわからないという人向けに、Googleアカウントとインターネット環境を利用した3行でできる解析方法も記載しています。詳しくは本ページ下部の「プログラムミングはよくわからない方へ」を参照してください。  
+プログラムミングはよくわからないという人向けに、Googleアカウントとインターネット環境を利用した3行でできる解析方法も記載しています。詳しくは本ページ下部の「プログラムミングがよくわからない方へ」を参照してください。  
   
 なお、本パッケージは「とりあえずグラフ化して測定結果の概要を見たい」といった予備解析的な場合での利用を想定しています。  
 
@@ -30,4 +30,8 @@ visualizer('sample1.csv', file_path = '/content/drive/My Drive/')
 ・３行のコピペで上記使用例のような解析が可能です。  
 ・解析速度はインターネット環境や解析ファイルサイズによりますが、97列x150行のデータであれば30秒ほどで完了します。  
 
-## 
+
+
+## プログラムミングがよくわからない方へ
+この解析パッケージはGoogleが提供しているGoogle Colaboratoryを使うことで簡単に利用できます。  
+Google Colaboratoryに関しては「[Colaboratory とは](https://colab.research.google.com/notebooks/welcome.ipynb?hl=ja)」をご確認ください。
