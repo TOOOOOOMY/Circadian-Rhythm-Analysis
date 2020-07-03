@@ -6,6 +6,15 @@
 なお、本パッケージは「とりあえずグラフ化して測定結果の概要を見たい」といった予備解析的な場合での利用を想定しています。  
 
 ## 使用例
+```py
+pip install cr-analysis
+from cr_analysis.main import visualizer
+
+# Prepare the csv file. E.g. sample1.csv
+# E.g. 
+visualizer('sample1.csv', file_path = '/content/drive/My Drive/')
+```
+
 １：概要＆同系列を重ねて表示
 ![sample1 csv - overview_4_col_plot](https://user-images.githubusercontent.com/45617592/86256856-c680d380-bbf3-11ea-92a7-92be3bdb547f.jpg)
 
