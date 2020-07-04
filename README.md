@@ -1,4 +1,4 @@
-# Pyhton_for_Circadian
+# cr-analysis, python package for circadian analysis!
 **01/07/2020 cr-analysis 3.0.0 is available now!**
 
 ```py
