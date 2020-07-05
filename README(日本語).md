@@ -12,18 +12,28 @@ from cr_analysis.main import visualizer
 
 # Prepare the csv file. E.g. sample1.csv
 # E.g. 
-visualizer('sample1.csv', file_path = '/content/drive/My Drive/')
+# 「概要＆同系列を重ねて表示」と「個別表示」
+visualizer('sample1.csv', file_path = '')
+
+# 上記＋「重ね合わせ表示」
+setting_3 = {
+    "Comparison 5:2" : [5, 2],
+    "Comparison 5:4" : [5, 4],
+    "Comparison 7:4" : [7, 4]
+}
+visualizer('sample1.csv', file_path = '', overlap_dict = setting_3)
+
 ```
 
 １：概要＆同系列を重ねて表示
 ![sample1 csv - overview_4_col_plot](https://user-images.githubusercontent.com/45617592/86256856-c680d380-bbf3-11ea-92a7-92be3bdb547f.jpg)
 
   
-２：個別に表示
+２：個別表示
 ![sample1 csv - All_plot](https://user-images.githubusercontent.com/45617592/86256927-d993a380-bbf3-11ea-9a42-b81b4fc07ff8.jpg)
 
 
-３：重ね合わせて表示
+３：重ね合わせ表示
 ![sample1 csv - comparison_plot](https://user-images.githubusercontent.com/45617592/86256644-8883af80-bbf3-11ea-8c4b-38d8090bbffd.png)
 
 ## 特徴
