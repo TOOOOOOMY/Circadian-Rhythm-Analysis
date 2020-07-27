@@ -22,7 +22,6 @@ setting_3 = {
     "Comparison 7:4" : [7, 4]
 }
 visualizer('sample1.csv', file_path = '', overlap_dict = setting_3)
-
 ```
 
 １：概要＆同系列を重ねて表示
@@ -46,5 +45,13 @@ visualizer('sample1.csv', file_path = '', overlap_dict = setting_3)
 
 
 ## プログラムミングがよくわからない方へ
-この解析パッケージはGoogleが提供しているGoogle Colaboratoryを使うことで簡単に利用できます。  
-Google Colaboratoryに関しては「[Colaboratory とは](https://colab.research.google.com/notebooks/welcome.ipynb?hl=ja)」をご確認ください。
+この解析パッケージはGoogleが提供しているGoogle Colaboratory（Colab）を使うことで簡単に利用できます。  
+Colabに関しては「[Colaboratory とは](https://colab.research.google.com/notebooks/welcome.ipynb?hl=ja)」をご確認ください。
+
+### 使い方
+1. 新しいColabを開き、最初のセルに以下のコードをコピペしてShiftキーとEnterキーを同時押しします。
+```py
+pip install cr-analysis
+```
+
+
