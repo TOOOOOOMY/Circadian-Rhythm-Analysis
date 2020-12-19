@@ -327,3 +327,55 @@ class quirck_look(visualizer):
         # methods.strain_compare(strain_compare_info = strain_compare)
         # methods.all()
     
+
+    
+# How to use
+common_setting_ ={
+    "x_axis_title" : "Time [h]",
+    "y_axis_title" : "Bioluminescence",
+    "sampling_period" : 60,
+    "analysis_start" : 0, # 通常は24時間目から解析
+    "analysis_end" : 0, # ０で最後まで解析
+    "moving_avrg_range" : 24, # 0ならオフ
+    "yaxis_percentage_switch" : 1,
+    "yaxis_share_switch" : 1,
+    "96well_position_file" : "96well_positions.csv",
+    "plot_save_switch" : 1,
+    "save_path" : "/content/"
+}
+subtitle_and_color_ = {
+    0 : ("black", "Non"), 
+    1 : ("red", "TOC1-Resi-R"),
+    2 : ("orange", "TOC1-Resi-AR"),
+    3 : ("green", "TOC1-Sens-R"),
+    4 : ("lightgreen", "TOC1-Sens-AR"),
+    5 : ("blue", "CBR"),
+    6 : ("lightblue", "Group6"),
+    7 : ("orangered", "PRR1-Resi-R"),
+    8 : ("salmon", "PRR1-Resi-AR"),
+    9 : ("forestgreen", "PRR1-Sens-R"),
+    10 : ("limegreen", "PRR1-Sens-AR")
+}
+
+
+methods = visualizer("t.w.20100901.csv", common_setting_, subtitle_and_color_)
+# quirck_look("t.w.20100901.csv", common_setting_, subtitle_and_color_, compare_info_).over_and_all_view()
+
+methods.overview()
+
+strain_compare_info_ = {
+    # name : (x, y) <- グラフの名前 : [比較したい系列の番号]
+    "TOC1" : (1, 3),
+    "TOC1  with CBR" : (1, 3, 5),
+    "PRR1" : (7, 9)
+}
+
+methods.strain_compare(strain_compare_info_)
+
+methods.clone_compare(
+    clone_compare_info = {
+        "Sample":("C09", "C06", "C10")
+    }
+)
+
+methods.all()
