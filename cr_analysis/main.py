@@ -280,7 +280,7 @@ class visualizer:
         # print(data_types_dict)
         plot_count : int = 1
         fig = plt.figure(figsize=(col_number*graph_width, -(-len(data_types_dict)//col_number)*graph_length))
-        fig.suptitle('Overview')
+        # fig.suptitle('Overview')
         for key, value in data_types_dict.items():
             ax =  fig.add_subplot(len(data_types_dict)//col_number+1, col_number, plot_count)
             for col in value:
@@ -315,7 +315,7 @@ class visualizer:
             data_types_dict = self.types_dict
             plot_count : int = 1
             fig = plt.figure(figsize=(col_number*graph_width, -(-len(strain_compare_info)//col_number)*graph_length))
-            fig.suptitle('Strains comparison')
+            # fig.suptitle('Strains comparison')
             for graph_name, value in strain_compare_info.items():
                 handles = []
                 labels = []
@@ -363,7 +363,7 @@ class visualizer:
                     return positions.at[col_name[0], col_name[1:3]]
 
             fig = plt.figure(figsize=(col_number*graph_width, -(-len(clone_compare_info)//col_number)*graph_length))
-            fig.suptitle('Clones comparison')
+            # fig.suptitle('Clones comparison')
             plot_count = 1
             for title, clones_tuple in clone_compare_info.items():
                 ax =  fig.add_subplot(-(-len(clone_compare_info)//col_number), col_number, plot_count)
@@ -412,7 +412,7 @@ class visualizer:
                 return positions.at[col_name[0], col_name[1:3]]
 
         fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
-        fig.suptitle('All')
+        # fig.suptitle('All')
         plot_count = 1
         for col in self.plot_data:
             ax =  fig.add_subplot(-(-len(self.plot_data.columns)//col_number), col_number, plot_count)
