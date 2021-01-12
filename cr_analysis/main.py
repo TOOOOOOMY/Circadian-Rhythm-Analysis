@@ -1,8 +1,8 @@
 """
 ==========
 Author: Tomoki WATANABE
-Update: 20/12/2020
-Version: 4.2.2
+Update: 12/01/2021
+Version: 4.2.4
 License: BSD License
 Programing Language: Python3
 ==========
