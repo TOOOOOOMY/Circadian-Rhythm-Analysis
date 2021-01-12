@@ -23,11 +23,12 @@ class visualizer:
         file_name, 
         common_setting,
         subtitle_and_color,
+        file_path = "/content/"
         # compare_info
     ):
 
         # 96well positions 読み込み
-        def well_positions_reader(file_name, file_location = "/content/"):
+        def well_positions_reader(file_name, file_location = file_path):
             # group_list = sorted(list(set(sum(positions.values.tolist(), []))))
             if os.path.exists(file_location + file_name):
                 file_type = file_name.split(".")[-1]
@@ -43,7 +44,7 @@ class visualizer:
                 return None
 
         # 測定結果読み込み
-        def data_reader(file_name, file_location = "/content/"): 
+        def data_reader(file_name, file_location = file_path): 
             # LUMICEC出力データ読み込み
             def lumicec_reader(file_location, file_name):
                 # if not file_name.split(".")[-1] == "xlsx":
@@ -404,12 +405,30 @@ class visualizer:
             plt.show()
 
 
-    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1):
+    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, peak_dicplay = 1, cal_range = 24):
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
             else :
                 return positions.at[col_name[0], col_name[1:3]]
+
+        def peak_detection(col_data, cal_range):
+            index_min = min(col_data.index)
+            x = []
+            y = []
+            # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
+            for i in range(0, len(col_data), 1):
+                if i-int(cal_range/2) < 0:
+                    local_max = max(col_data[0:i+int(cal_range/2)+1])
+                else :
+                    local_max = max(col_data[i-int(cal_range/2):i+int(cal_range/2)+1])
+                if local_max == col_data[i + index_min]:
+                    # print('Max! : ' + str(i))
+                    x.append(i + index_min)
+                    y.append(col_data[i + index_min])
+                    # plt.plot(0.1, 1.2, marker='*')
+            return x, y
+
 
         fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
         # fig.suptitle('All')
@@ -418,6 +437,11 @@ class visualizer:
             ax =  fig.add_subplot(-(-len(self.plot_data.columns)//col_number), col_number, plot_count)
             if col_posi_linker(col, self.positions):
                 ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                if peak_dicplay:
+                    x, y = peak_detection(self.plot_data[col], cal_range)
+                    ax.scatter(x, y, marker='*')
+                else :
+                    pass
             else : # col_posi_linker(col, positions) == 0
                 if blank_off:
                     ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
@@ -433,6 +457,65 @@ class visualizer:
             if self.common_setting["yaxis_share_switch"]:
                 ax.set_ylim(0, self.Y_max)
             ax.set_ylabel(self.common_setting["y_axis_title"])
+            ax.grid(axis="both")
+
+        fig.tight_layout()
+        if self.common_setting["plot_save_switch"]: # == 1
+            plt.savefig(self.common_setting["save_path"] + f"all_plot.jpg")
+        else :
+            pass
+        plt.show()
+
+
+    def wavelength_cal(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
+        def col_posi_linker(col_name, positions):
+            if col_name[1] == "0":
+                return positions.at[col_name[0], col_name[2]]
+            else :
+                return positions.at[col_name[0], col_name[1:3]]
+
+        def peak_detection(col_data, cal_range):
+            index_min = min(col_data.index)
+            x = []
+            y = []
+            # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
+            for i in range(0, len(col_data), 1):
+                if i-int(cal_range/2) < 0:
+                    local_max = max(col_data[0:i+int(cal_range/2)+1])
+                else :
+                    local_max = max(col_data[i-int(cal_range/2):i+int(cal_range/2)+1])
+                if local_max == col_data[i + index_min]:
+                    # print('Max! : ' + str(i))
+                    x.append(i + index_min)
+                    y.append(col_data[i + index_min])
+                    # plt.plot(0.1, 1.2, marker='*')
+            return list(range(1, len(x))), [x[i+1] - x[i] for i in range(0, len(x)-1)]
+
+        fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
+        fig.suptitle('All')
+        plot_count = 1
+        # return self.plot_data
+        for col in self.plot_data:
+            ax =  fig.add_subplot(-(-len(self.plot_data.columns)//col_number), col_number, plot_count)
+            if col_posi_linker(col, self.positions):
+                # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                x, y = peak_detection(self.plot_data[col], cal_range)
+                ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+            else : # col_posi_linker(col, positions) == 0
+                if blank_off:
+                    ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
+                else :
+                    ax.plot(self.plot_data.index, self.plot_data[col], color = "black")
+            plot_count = plot_count + 1
+
+            # n_rythm = int(-(-((len(self.plot_data[col])-1)/(60/self.common_setting["sampling_period"]))//24))
+            ax.set_title(col)
+            # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
+            # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
+            # ax.set_xlabel(self.common_setting["x_axis_title"])
+            # if self.common_setting["yaxis_share_switch"]:
+            ax.set_ylim(0, y_lim)
+            # ax.set_ylabel(self.common_setting["y_axis_title"])
             ax.grid(axis="both")
 
         fig.tight_layout()
