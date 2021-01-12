@@ -15,6 +15,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import itertools
 import json
+from sklearn.metrics import r2_score
 
 
 class visualizer:
@@ -501,6 +502,14 @@ class visualizer:
                 # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
                 x, y = peak_detection(self.plot_data[col], cal_range)
                 ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                # 参考：https://qiita.com/yuto_ohno/items/d2676e04f2d94fc30248
+                coef=np.polyfit(x, y, 1)
+                appr = np.poly1d(coef)(x)
+                plt.plot(x, appr,  color = 'black', linestyle=':')
+                y_pred = [coef[0]*i+coef[1] for i in x]
+                r2 = r2_score(y, y_pred)
+                ax.text(max(x)/3.7, max(y)*6/8, 'y={:.2f}x + {:.2f}, \n$R^2$={:.2f}'.format(coef[0], coef[1], r2), fontsize=15)
+
             else : # col_posi_linker(col, positions) == 0
                 if blank_off:
                     ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
