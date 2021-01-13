@@ -1,8 +1,8 @@
 """
 ==========
 Author: Tomoki WATANABE
-Update: 12/01/2021
-Version: 4.2.4
+Update: 13/01/2021
+Version: 4.2.5
 License: BSD License
 Programing Language: Python3
 ==========
@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import itertools
 import json
 from sklearn.metrics import r2_score
+from statistics import mean
 
 
 class visualizer:
@@ -255,7 +256,10 @@ class visualizer:
                 self.plot_data = percentage_cal(ranged_data)
             self.Y_max = 100
         else :
-            self.plot_data = ranged_data
+            if common_setting["moving_avrg_range"]:
+                self.plot_data = moving_avrg(common_setting["moving_avrg_range"], ranged_data)
+            else :
+                self.plot_data = ranged_data
             self.Y_max = -(-np.amax(np.amax(ranged_data))//1000)*1000
 
         types = list(set(itertools.chain.from_iterable(row for row in self.positions.values)))
@@ -406,7 +410,7 @@ class visualizer:
             plt.show()
 
 
-    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, peak_dicplay = 1, cal_range = 24):
+    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, peak_display = 1, cal_range = 24):
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
@@ -418,7 +422,7 @@ class visualizer:
             x = []
             y = []
             # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
-            for i in range(0, len(col_data), 1):
+            for i in range(0 + self.common_setting['peak_detection_after'], len(col_data)-1, 1):
                 if i-int(cal_range/2) < 0:
                     local_max = max(col_data[0:i+int(cal_range/2)+1])
                 else :
@@ -438,9 +442,10 @@ class visualizer:
             ax =  fig.add_subplot(-(-len(self.plot_data.columns)//col_number), col_number, plot_count)
             if col_posi_linker(col, self.positions):
                 ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
-                if peak_dicplay:
+                if peak_display:
                     x, y = peak_detection(self.plot_data[col], cal_range)
                     ax.scatter(x, y, marker='*')
+                    ax.set_title(f'{col} : p={len(y)}')
                 else :
                     pass
             else : # col_posi_linker(col, positions) == 0
@@ -448,10 +453,10 @@ class visualizer:
                     ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
                 else :
                     ax.plot(self.plot_data.index, self.plot_data[col], color = "black")
+                ax.set_title(col)
             plot_count = plot_count + 1
 
             n_rythm = int(-(-((len(self.plot_data[col])-1)/(60/self.common_setting["sampling_period"]))//24))
-            ax.set_title(col)
             ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
             ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
             ax.set_xlabel(self.common_setting["x_axis_title"])
@@ -468,7 +473,7 @@ class visualizer:
         plt.show()
 
 
-    def wavelength_cal(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
+    def period_cal(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
@@ -480,7 +485,7 @@ class visualizer:
             x = []
             y = []
             # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
-            for i in range(0, len(col_data), 1):
+            for i in range(0 + self.common_setting['peak_detection_after'], len(col_data)-1, 1):
                 if i-int(cal_range/2) < 0:
                     local_max = max(col_data[0:i+int(cal_range/2)+1])
                 else :
@@ -491,7 +496,7 @@ class visualizer:
                     y.append(col_data[i + index_min])
                     # plt.plot(0.1, 1.2, marker='*')
             return list(range(1, len(x))), [x[i+1] - x[i] for i in range(0, len(x)-1)]
-
+        period_dict = {}
         fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
         fig.suptitle('All')
         plot_count = 1
@@ -502,28 +507,103 @@ class visualizer:
                 # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
                 x, y = peak_detection(self.plot_data[col], cal_range)
                 ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                ax.set_title(f'col : avrg={round(sum(y)/len(y), 2)}')
+                if self.subtitle_and_color[col_posi_linker(col, self.positions)][1] in period_dict.keys():
+                    period_dict[self.subtitle_and_color[col_posi_linker(col, self.positions)][1]].append(round(sum(y)/len(y), 2))
+                else :
+                    period_dict[self.subtitle_and_color[col_posi_linker(col, self.positions)][1]] = [round(sum(y)/len(y), 2)]
                 # 参考：https://qiita.com/yuto_ohno/items/d2676e04f2d94fc30248
-                coef=np.polyfit(x, y, 1)
-                appr = np.poly1d(coef)(x)
-                plt.plot(x, appr,  color = 'black', linestyle=':')
-                y_pred = [coef[0]*i+coef[1] for i in x]
-                r2 = r2_score(y, y_pred)
-                ax.text(max(x)/3.7, max(y)*6/8, 'y={:.2f}x + {:.2f}, \n$R^2$={:.2f}'.format(coef[0], coef[1], r2), fontsize=15)
+                # coef=np.polyfit(x, y, 1)
+                # appr = np.poly1d(coef)(x)
+                # plt.plot(x, appr,  color = 'black', linestyle=':')
+                # y_pred = [coef[0]*i+coef[1] for i in x]
+                # r2 = r2_score(y, y_pred)
+                # ax.text(max(x)/3.7, max(y)*6/8, 'y={:.2f}x + {:.2f}, \n$R^2$={:.2f}'.format(coef[0], coef[1], r2), fontsize=14)
 
             else : # col_posi_linker(col, positions) == 0
                 if blank_off:
                     ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
                 else :
                     ax.plot(self.plot_data.index, self.plot_data[col], color = "black")
+                ax.set_title(col)
             plot_count = plot_count + 1
 
             # n_rythm = int(-(-((len(self.plot_data[col])-1)/(60/self.common_setting["sampling_period"]))//24))
-            ax.set_title(col)
             # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
             # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
             # ax.set_xlabel(self.common_setting["x_axis_title"])
             # if self.common_setting["yaxis_share_switch"]:
             ax.set_ylim(0, y_lim)
+            # ax.set_ylabel(self.common_setting["y_axis_title"])
+            ax.grid(axis="both")
+
+        fig.tight_layout()
+        if self.common_setting["plot_save_switch"]: # == 1
+            plt.savefig(self.common_setting["save_path"] + f"all_plot.jpg")
+        else :
+            pass
+        plt.show()
+
+        for key, value in period_dict.items():
+            print(f'{key} : {mean(value)}')
+
+
+    def wavelenght_cal(self, d_period = 12, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
+        def col_posi_linker(col_name, positions):
+            if col_name[1] == "0":
+                return positions.at[col_name[0], col_name[2]]
+            else :
+                return positions.at[col_name[0], col_name[1:3]]
+
+        def peak_position(col_data, cal_range, d_period):
+            index_min = min(col_data.index)
+            peak_time = []
+            # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
+            for i in range(0 + self.common_setting['peak_detection_after'], len(col_data)-1, 1):
+                if i-int(cal_range/2) < 0:
+                    local_max = max(col_data[0:i+int(cal_range/2)+1])
+                else :
+                    local_max = max(col_data[i-int(cal_range/2):i+int(cal_range/2)+1])
+                if local_max == col_data[i + index_min]:
+                    peak_time.append(i + index_min)
+            return list(range(1, len(peak_time)+1)), [(k-d_period)%24 for k in peak_time], peak_time
+
+        # return self.plot_data
+        fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
+        fig.suptitle('All')
+        plot_count = 1
+        for col in self.plot_data:
+            ax =  fig.add_subplot(-(-len(self.plot_data.columns)//col_number), col_number, plot_count)
+            if col_posi_linker(col, self.positions):
+                # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                x, y, _ = peak_position(self.plot_data[col], cal_range, d_period)
+                # print('x = ' + str(x))
+                # print('y = ' + str(y))
+                ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                # 参考：https://qiita.com/yuto_ohno/items/d2676e04f2d94fc30248
+                coef=np.polyfit(x, y, 1)
+                appr = np.poly1d(coef)(x)
+                plt.plot(x, appr,  color = 'black', linestyle=':')
+                y_pred = [coef[0]*i+coef[1] for i in x]
+                r2 = r2_score(y, y_pred)
+                ax.text(max(x)/3.7, max(y)*6/8, 'y={:.2f}x + {:.2f}, \n$R^2$={:.2f}'.format(coef[0], coef[1], r2), fontsize=14)
+                ax.set_title(f'{col} : p={y}')
+
+            else : # col_posi_linker(col, positions) == 0
+                if blank_off:
+                    ax.plot(self.plot_data.index, [0]*len(self.plot_data.index), color = "black")
+                else :
+                    ax.plot(self.plot_data.index, self.plot_data[col], color = "black")
+                ax.set_title(col)
+            plot_count = plot_count + 1
+
+            # n_rythm = int(-(-((len(self.plot_data[col])-1)/(60/self.common_setting["sampling_period"]))//24))
+            # ax.set_title(f'{col} : p={len(y)}')
+            # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
+            # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
+            # ax.set_xlabel(self.common_setting["x_axis_title"])
+            # if self.common_setting["yaxis_share_switch"]:
+            ax.set_ylim(0, 25)
             # ax.set_ylabel(self.common_setting["y_axis_title"])
             ax.grid(axis="both")
 
