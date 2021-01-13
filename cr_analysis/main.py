@@ -17,6 +17,7 @@ import itertools
 import json
 from sklearn.metrics import r2_score
 from statistics import mean
+from scipy import stats
 
 
 class visualizer:
