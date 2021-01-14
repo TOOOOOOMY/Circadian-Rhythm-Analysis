@@ -1,8 +1,8 @@
 """
 ==========
 Author: Tomoki WATANABE
-Update: 13/01/2021
-Version: 4.2.5
+Update: 14/01/2021
+Version: 4.2.6
 License: BSD License
 Programing Language: Python3
 ==========
@@ -17,7 +17,18 @@ import itertools
 import json
 from sklearn.metrics import r2_score
 from statistics import mean
-from scipy import stats
+from scipy import stats as st
+import itertools
+
+
+def t_test(period_dict):
+    for pair in itertools.combinations(tuple(period_dict.keys()), 2):
+        result = stats.ttest_ind(period_dict[pair[0]], period_dict[pair[1]], equal_var=False)
+        if result.pvalue < 0.05:
+            print(str(pair) + ' -> 差が「ある」')
+        else :
+            # print(str(pair) + ' -> 差が「ない」')
+            pass
 
 
 class visualizer:
@@ -242,8 +253,11 @@ class visualizer:
         self.common_setting = common_setting
         self.subtitle_and_color = subtitle_and_color
         self.positions = well_positions_reader(common_setting["96well_position_file"])
-
+        # print('Row data')
+        # print(data_reader(file_name))
         ranged_data = range_extraction(data_reader(file_name), common_setting["analysis_start"], common_setting["analysis_end"])
+        # print('Ranged data')
+        # print(ranged_data)
 
         if common_setting["yaxis_percentage_switch"]:
             def percentage_cal(data):
@@ -508,7 +522,7 @@ class visualizer:
                 # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
                 x, y = peak_detection(self.plot_data[col], cal_range)
                 ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
-                ax.set_title(f'col : avrg={round(sum(y)/len(y), 2)}')
+                ax.set_title(f'{col} : avrg={round(sum(y)/len(y), 2)}')
                 if self.subtitle_and_color[col_posi_linker(col, self.positions)][1] in period_dict.keys():
                     period_dict[self.subtitle_and_color[col_posi_linker(col, self.positions)][1]].append(round(sum(y)/len(y), 2))
                 else :
@@ -534,7 +548,7 @@ class visualizer:
             # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
             # ax.set_xlabel(self.common_setting["x_axis_title"])
             # if self.common_setting["yaxis_share_switch"]:
-            ax.set_ylim(0, y_lim)
+            ax.set_ylim(15, 30)
             # ax.set_ylabel(self.common_setting["y_axis_title"])
             ax.grid(axis="both")
 
@@ -544,9 +558,8 @@ class visualizer:
         else :
             pass
         plt.show()
+        return t_test(period_dict)
 
-        for key, value in period_dict.items():
-            print(f'{key} : {mean(value)}')
 
 
     def wavelenght_cal(self, d_period = 12, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
