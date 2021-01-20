@@ -1,8 +1,8 @@
 """
 ==========
 Author: Tomoki WATANABE
-Update: 14/01/2021
-Version: 4.2.6
+Update: 20/01/2021
+Version: 4.2.8
 License: BSD License
 Programing Language: Python3
 ==========
@@ -18,17 +18,30 @@ import json
 from sklearn.metrics import r2_score
 from statistics import mean
 from scipy import stats as st
-import itertools
 
+def f_test(A, B):
+    # 参考：https://qiita.com/suaaa7/items/745ac1ca0a8d6753cf60
+    A_var = np.var(A, ddof=1)  # Aの不偏分散
+    B_var = np.var(B, ddof=1)  # Bの不偏分散
+    A_df = len(A) - 1  # Aの自由度
+    B_df = len(B) - 1  # Bの自由度
+    f = A_var / B_var  # F比の値
+    one_sided_pval1 = st.f.cdf(f, A_df, B_df)  # 片側検定のp値 1
+    one_sided_pval2 = st.f.sf(f, A_df, B_df)   # 片側検定のp値 2
+    two_sided_pval = min(one_sided_pval1, one_sided_pval2) * 2  # 両側検定のp値
 
-def t_test(period_dict):
-    for pair in itertools.combinations(tuple(period_dict.keys()), 2):
-        result = stats.ttest_ind(period_dict[pair[0]], period_dict[pair[1]], equal_var=False)
-        if result.pvalue < 0.05:
-            print(str(pair) + ' -> 差が「ある」')
+    print('F:       ', round(f, 3))
+    print(f'p-value: {round(two_sided_pval, 3)}')
+    if round(two_sided_pval, 3) > 0.05:
+        print('この2群間は少なくとも「不」等分散でない -> Student T検定可')
+        reslut = stats.ttest_rel(A, B)
+        print(reslut)
+        if reslut.pvalue < 0.05:
+            print('2群間には差があると言える')
         else :
-            # print(str(pair) + ' -> 差が「ない」')
-            pass
+            print('2群間には差があるとは言え「ない」')
+    else :
+        print('この2群間は少なくとも等分散でない -> Student T検定「不」可')
 
 
 class visualizer:
@@ -235,6 +248,7 @@ class visualizer:
             extraction_end
             ):
             if extraction_end == 0:
+
                 return original_data[extraction_start:]
             else :
                 if extraction_start >= extraction_end:
@@ -249,6 +263,12 @@ class visualizer:
             else :
                 return self.positions.at[col_name[0], col_name[1:3]]
 
+        def percentage_cal(data):
+            new_data = pd.DataFrame(columns=data.columns.values)
+            for col in data.columns.values:
+                new_data[col] = data[col]/max(data[col])*100
+            return new_data
+
         self.file_name = file_name
         self.common_setting = common_setting
         self.subtitle_and_color = subtitle_and_color
@@ -259,41 +279,31 @@ class visualizer:
         # print('Ranged data')
         # print(ranged_data)
 
-        if common_setting["yaxis_percentage_switch"]:
-            def percentage_cal(data):
-                new_data = pd.DataFrame(columns=data.columns.values)
-                for col in data.columns.values:
-                    new_data[col] = data[col]/max(data[col])*100
-                return new_data
-            if common_setting["moving_avrg_range"]:
-                self.plot_data = percentage_cal(moving_avrg(common_setting["moving_avrg_range"], ranged_data))
-            else :
-                self.plot_data = percentage_cal(ranged_data)
-            self.Y_max = 100
-        else :
-            if common_setting["moving_avrg_range"]:
-                self.plot_data = moving_avrg(common_setting["moving_avrg_range"], ranged_data)
-            else :
-                self.plot_data = ranged_data
-            self.Y_max = -(-np.amax(np.amax(ranged_data))//1000)*1000
-
         types = list(set(itertools.chain.from_iterable(row for row in self.positions.values)))
         types_dict = dict(zip(types, [[] for _ in range(len(types))]))
 
-        for key in self.plot_data.columns:
-            types_dict[col_posi_linker(key)].append(self.plot_data[key])
-        del types_dict[0]
+        if common_setting["yaxis_percentage_switch"]:
+            if common_setting["moving_avrg_range"]:
+                plot_data = percentage_cal(moving_avrg(common_setting["moving_avrg_range"], ranged_data))
+            else :
+                plot_data = percentage_cal(ranged_data)
+            self.Y_max = 100
+        else :
+            if common_setting["moving_avrg_range"]:
+                plot_data = moving_avrg(common_setting["moving_avrg_range"], ranged_data)
+            else :
+                plot_data = ranged_data
+            self.Y_max = -(-np.amax(np.amax(ranged_data))//1000)*1000
+
+        self.plot_data = plot_data
+
+        for key in plot_data.columns:
+            types_dict[col_posi_linker(key)].append(plot_data[key])
+        # del types_dict[0]
         self.types_dict = types_dict
 
         print("Welcome to chlamy bioluminescence visualizer!")
 
-    """
-    def col_posi_linker(col_name):
-        if col_name[1] == "0":
-            return self.positions.at[col_name[0], col_name[2]]
-        else :
-            return self.positions.at[col_name[0], col_name[1:3]]
-    """
 
     def overview(self, graph_width = 4, graph_length = 4, col_number = 3):
         data_types_dict = self.types_dict
@@ -328,33 +338,57 @@ class visualizer:
 
 
     # MTとWTとかの系統単位での比較
-    def strain_compare(self, strain_compare_info={}, graph_width = 4, graph_length = 4, col_number = 2):
+    def strain_compare(self, strain_compare_info={}, graph_width = 4, graph_length = 4, col_number = 2, cal_range=12, bar_range = (15, 30)):
+
+        def peak_detection(col_data, cal_range):
+            index_min = min(col_data.index)
+            x = []
+            y = []
+            # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
+            for i in range(0 + self.common_setting['peak_detection_after'], len(col_data)-1, 1):
+                if i-int(cal_range/2) < 0:
+                    local_max = max(col_data[0:i+int(cal_range/2)+1])
+                else :
+                    local_max = max(col_data[i-int(cal_range/2):i+int(cal_range/2)+1])
+                if local_max == col_data[i + index_min]:
+                    # print('Max! : ' + str(i))
+                    x.append(i + index_min)
+                    # y.append(col_data[i + index_min])
+            return [x[i+1] - x[i] for i in range(0, len(x)-1)]
+            # return list(range(1, len(x))), [x[i+1] - x[i] for i in range(0, len(x)-1)]
+
         if len(strain_compare_info) < 1:
             print("No comparison.")
             return
         else :
             data_types_dict = self.types_dict
             plot_count : int = 1
-            fig = plt.figure(figsize=(col_number*graph_width, -(-len(strain_compare_info)//col_number)*graph_length))
+            fig = plt.figure(figsize=(col_number*graph_width, -(-len(strain_compare_info)//col_number)*graph_length*2))
             # fig.suptitle('Strains comparison')
-            for graph_name, value in strain_compare_info.items():
+            period_dict = {}
+            for graph_name, target_list in strain_compare_info.items():
                 handles = []
                 labels = []
-                ax =  fig.add_subplot(-(-len(strain_compare_info)//col_number), col_number, plot_count)
-                for type_number in value:
+                ax =  fig.add_subplot(-(-len(strain_compare_info)//col_number)*2, col_number, plot_count)
+                for target_number in target_list:
+                    periods = []
                     try :
-                        for col in data_types_dict[type_number]:
-                            line = ax.plot(col.index, col, color=self.subtitle_and_color[type_number][0])
+                        for col in data_types_dict[target_number]:
+                            line = ax.plot(col.index, col, color=self.subtitle_and_color[target_number][0])
+                            periods.append(peak_detection(col, cal_range))
+                        print(f'{self.subtitle_and_color[target_number][1]} : {mean(list(itertools.chain.from_iterable(periods)))}')
+                        print(list(periods))
                     except KeyError:
-                        print(f"エラー：系統番号 {type_number} は96well_positionsに登録されていません。")
+                        print(f"エラー：系統番号 {target_number} は96well_positionsに登録されていません。")
                         return
                     else :
                         handles.append(line[0])
-                        labels.append(self.subtitle_and_color[type_number][1])
+                        labels.append(self.subtitle_and_color[target_number][1])
+                    period_dict[self.subtitle_and_color[target_number][1]] = periods
                 ax.legend(handles, labels)
                 plot_count = plot_count + 1
 
-                n_rythm = int(-(-((len(data_types_dict[type_number][0])-1)/(60/self.common_setting["sampling_period"]))//24))
+                n_rythm = int(-(-((len(data_types_dict[target_number][0])-1)/(60/self.common_setting["sampling_period"]))//24))
                 ax.set_title(graph_name)
                 ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
                 ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
@@ -363,6 +397,30 @@ class visualizer:
                     ax.set_ylim(0, self.Y_max)
                 ax.set_ylabel(self.common_setting["y_axis_title"])
                 ax.grid(axis="both")
+
+                handles = []
+                labels = []
+                ax =  fig.add_subplot(-(-len(strain_compare_info)//col_number)*2, col_number, plot_count)
+                for target_number in target_list:
+                    try :
+                        target_name = self.subtitle_and_color[target_number][1]
+                        mean_ = mean([mean(value) for value in period_dict[target_name]])
+                        ax.bar(target_name, mean_, yerr=max(tuple(value - mean_ for value in [mean(value) for value in period_dict[target_name]])), capsize=5, color=self.subtitle_and_color[target_number][0])
+                        # print(f'{self.subtitle_and_color[target_number][1]} : {mean(list(itertools.chain.from_iterable(periods)))}')
+                        # print(list(periods))
+                    except KeyError:
+                        print(f"エラー：系統番号 {target_number} は96well_positionsに登録されていません。")
+                        return
+                plot_count = plot_count + 1
+
+                ax.set_title(graph_name)
+                # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm+1))
+                # ax.set_xticks(np.linspace(0, int(n_rythm*24), n_rythm*4+1), minor=True)
+                # ax.set_xlabel(self.common_setting["x_axis_title"])
+                ax.set_ylim(bar_range[0], bar_range[1])
+                ax.set_ylabel('Time [h]')
+                ax.grid(axis="both")
+
 
             fig.tight_layout()
             if self.common_setting["plot_save_switch"]: # == 1
@@ -425,7 +483,7 @@ class visualizer:
             plt.show()
 
 
-    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, peak_display = 1, cal_range = 24):
+    def all(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, peak_display = 1, cal_range = 12):
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
@@ -460,7 +518,7 @@ class visualizer:
                 if peak_display:
                     x, y = peak_detection(self.plot_data[col], cal_range)
                     ax.scatter(x, y, marker='*')
-                    ax.set_title(f'{col} : p={len(y)}')
+                    ax.set_title(f'{col} : p={len(x)}')
                 else :
                     pass
             else : # col_posi_linker(col, positions) == 0
@@ -489,6 +547,7 @@ class visualizer:
 
 
     def period_cal(self, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
+
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
@@ -511,6 +570,7 @@ class visualizer:
                     y.append(col_data[i + index_min])
                     # plt.plot(0.1, 1.2, marker='*')
             return list(range(1, len(x))), [x[i+1] - x[i] for i in range(0, len(x)-1)]
+
         period_dict = {}
         fig = plt.figure(figsize=(col_number*graph_width, -(-len(self.plot_data.columns)//col_number)*graph_length))
         fig.suptitle('All')
@@ -521,7 +581,7 @@ class visualizer:
             if col_posi_linker(col, self.positions):
                 # ax.plot(self.plot_data.index, self.plot_data[col], color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
                 x, y = peak_detection(self.plot_data[col], cal_range)
-                ax.bar(x, y, color = self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
+                ax.bar(x, y, color=self.subtitle_and_color[col_posi_linker(col, self.positions)][0])
                 ax.set_title(f'{col} : avrg={round(sum(y)/len(y), 2)}')
                 if self.subtitle_and_color[col_posi_linker(col, self.positions)][1] in period_dict.keys():
                     period_dict[self.subtitle_and_color[col_posi_linker(col, self.positions)][1]].append(round(sum(y)/len(y), 2))
@@ -558,11 +618,10 @@ class visualizer:
         else :
             pass
         plt.show()
-        return t_test(period_dict)
+        return period_dict
 
 
-
-    def wavelenght_cal(self, d_period = 12, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 6, y_lim = 36):
+    def wavelenght_cal(self, d_period = 12, graph_width = 2.5, graph_length = 2.5, col_number = 12, blank_off = 1, cal_range = 12, y_lim = 36):
         def col_posi_linker(col_name, positions):
             if col_name[1] == "0":
                 return positions.at[col_name[0], col_name[2]]
@@ -627,4 +686,3 @@ class visualizer:
         else :
             pass
         plt.show()
-
