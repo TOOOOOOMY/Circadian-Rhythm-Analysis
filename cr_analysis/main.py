@@ -1,8 +1,8 @@
 """
 ==========
 Author: Tomoki WATANABE
-Update: 20/01/2021
-Version: 4.2.8
+Update: 21/01/2021
+Version: 4.2.9.1
 License: BSD License
 Programing Language: Python3
 ==========
@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import itertools
 import json
 from sklearn.metrics import r2_score
-from statistics import mean
-from scipy import stats as st
+from statistics import mean, stdev
+from scipy import stats
 
 def f_test(A, B):
     # 参考：https://qiita.com/suaaa7/items/745ac1ca0a8d6753cf60
@@ -26,8 +26,8 @@ def f_test(A, B):
     A_df = len(A) - 1  # Aの自由度
     B_df = len(B) - 1  # Bの自由度
     f = A_var / B_var  # F比の値
-    one_sided_pval1 = st.f.cdf(f, A_df, B_df)  # 片側検定のp値 1
-    one_sided_pval2 = st.f.sf(f, A_df, B_df)   # 片側検定のp値 2
+    one_sided_pval1 = stats.f.cdf(f, A_df, B_df)  # 片側検定のp値 1
+    one_sided_pval2 = stats.f.sf(f, A_df, B_df)   # 片側検定のp値 2
     two_sided_pval = min(one_sided_pval1, one_sided_pval2) * 2  # 両側検定のp値
 
     print('F:       ', round(f, 3))
@@ -343,7 +343,7 @@ class visualizer:
         def peak_detection(col_data, cal_range):
             index_min = min(col_data.index)
             x = []
-            y = []
+            # y = []
             # for i in range(int(cal_range/2), len(col_data)-int(cal_range/2), 1):
             for i in range(0 + self.common_setting['peak_detection_after'], len(col_data)-1, 1):
                 if i-int(cal_range/2) < 0:
@@ -362,11 +362,11 @@ class visualizer:
             return
         else :
             data_types_dict = self.types_dict
-            plot_count : int = 1
-            fig = plt.figure(figsize=(col_number*graph_width, -(-len(strain_compare_info)//col_number)*graph_length*2))
-            # fig.suptitle('Strains comparison')
-            period_dict = {}
             for graph_name, target_list in strain_compare_info.items():
+                plot_count : int = 1
+                fig = plt.figure(figsize=(col_number*graph_width, -(-len(strain_compare_info)//col_number)*graph_length*2))
+                # fig.suptitle('Strains comparison')
+                period_dict = {}
                 handles = []
                 labels = []
                 ax =  fig.add_subplot(-(-len(strain_compare_info)//col_number)*2, col_number, plot_count)
@@ -375,15 +375,17 @@ class visualizer:
                     try :
                         for col in data_types_dict[target_number]:
                             line = ax.plot(col.index, col, color=self.subtitle_and_color[target_number][0])
-                            periods.append(peak_detection(col, cal_range))
-                        print(f'{self.subtitle_and_color[target_number][1]} : {mean(list(itertools.chain.from_iterable(periods)))}')
-                        print(list(periods))
+                            # print(f'mean = {mean(peak_detection(col, cal_range))}')
+                            periods.append(mean(peak_detection(col, cal_range)))
+                        print(f'{self.subtitle_and_color[target_number][1]} : {mean(periods)}')
+                        # print(list(periods))
                     except KeyError:
                         print(f"エラー：系統番号 {target_number} は96well_positionsに登録されていません。")
                         return
                     else :
                         handles.append(line[0])
                         labels.append(self.subtitle_and_color[target_number][1])
+                    # print(f'periods = {periods}')
                     period_dict[self.subtitle_and_color[target_number][1]] = periods
                 ax.legend(handles, labels)
                 plot_count = plot_count + 1
@@ -402,10 +404,11 @@ class visualizer:
                 labels = []
                 ax =  fig.add_subplot(-(-len(strain_compare_info)//col_number)*2, col_number, plot_count)
                 for target_number in target_list:
+
                     try :
                         target_name = self.subtitle_and_color[target_number][1]
-                        mean_ = mean([mean(value) for value in period_dict[target_name]])
-                        ax.bar(target_name, mean_, yerr=max(tuple(value - mean_ for value in [mean(value) for value in period_dict[target_name]])), capsize=5, color=self.subtitle_and_color[target_number][0])
+                        mean_ = mean(period_dict[target_name])
+                        ax.bar(target_name, mean_, yerr=stdev(period_dict[target_name]), capsize=5, color=self.subtitle_and_color[target_number][0])
                         # print(f'{self.subtitle_and_color[target_number][1]} : {mean(list(itertools.chain.from_iterable(periods)))}')
                         # print(list(periods))
                     except KeyError:
@@ -421,13 +424,21 @@ class visualizer:
                 ax.set_ylabel('Time [h]')
                 ax.grid(axis="both")
 
+                fig.tight_layout()
+                if self.common_setting["plot_save_switch"]: # == 1
+                    plt.savefig(self.common_setting["save_path"] + f"compare_plot.jpg")
+                else :
+                    pass
+                plt.show()
 
-            fig.tight_layout()
-            if self.common_setting["plot_save_switch"]: # == 1
-                plt.savefig(self.common_setting["save_path"] + f"compare_plot.jpg")
-            else :
-                pass
-            plt.show()
+                for pair in itertools.combinations(target_list, 2):
+                    # print(pair)
+                    result = stats.ttest_ind(period_dict[self.subtitle_and_color[pair[0]][1]], period_dict[self.subtitle_and_color[pair[1]][1]], equal_var=False)
+                    if result.pvalue < 0.05:
+                        print(f'「{self.subtitle_and_color[pair[0]][1]}」と「{self.subtitle_and_color[pair[1]][1]}」 -> 差が「ある」')
+                    else :
+                        # print(str(pair) + ' -> 差が「ない」')
+                        pass
 
 
     # 株単位での比較
